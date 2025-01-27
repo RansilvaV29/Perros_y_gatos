@@ -10,32 +10,53 @@ let modelo = null;
 // Cargar modelo
 (async () => {
   console.log("Cargando modelo...");
-  modelo = await tf.loadLayersModel("assets/model.json");
+  modelo = await tf.loadLayersModel("../assets/model.jso");
   console.log("Modelo cargado");
 })();
 
 window.onload = () => mostrarCamara();
 
-const mostrarCamara = () => {
-  const opciones = { audio: false, video: { width: tamano, height: tamano } };
-  navigator.mediaDevices
-    .getUserMedia(opciones)
-    .then((stream) => {
-      currentStream = stream;
-      video.srcObject = currentStream;
-      procesarCamara();
-      predecir();
-    })
-    .catch((err) => alert("No se pudo utilizar la cámara: " + err));
-};
+function mostrarCamara() {
+  const opciones = {
+    audio: false,
+    video: {
+      facingMode: facingMode, // Asegura que se use el modo actual
+      width: tamano,
+      height: tamano,
+    },
+  };
 
-const cambiarCamara = () => {
+  if (navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia(opciones)
+      .then(function (stream) {
+        currentStream = stream;
+        video.srcObject = currentStream;
+        video.play(); // Asegura que el video comience a reproducirse
+        procesarCamara();
+        predecir();
+      })
+      .catch(function (err) {
+        console.error("Error al acceder a la cámara:", err);
+        alert("No se pudo utilizar la cámara :(");
+      });
+  } else {
+    alert("getUserMedia no está soportado en este navegador.");
+  }
+}
+
+function cambiarCamara() {
+  // Detener el flujo de video actual
   if (currentStream) {
     currentStream.getTracks().forEach((track) => track.stop());
   }
+
+  // Alternar entre cámaras
   facingMode = facingMode === "user" ? "environment" : "user";
+
+  // Reiniciar la cámara con el nuevo modo
   mostrarCamara();
-};
+}
+
 
 document.getElementById("cambiar-camara").onclick = cambiarCamara;
 
